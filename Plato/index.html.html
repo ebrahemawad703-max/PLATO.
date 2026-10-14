@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>بلاتو – اطلب أكلك</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Reem+Kufi:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F7F3;--card:#fff;--ink:#14261D;--mute:#5E6E65;--green:#12372A;--gold:#E3A21A;--line:#DCE3DD}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1A15;--card:#16251E;--ink:#EDF2EE;--mute:#9DB0A5;--green:#2E6B52;--line:#27382F}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,Tahoma,sans-serif;line-height:1.6}
+header{background:var(--green);color:#fff;padding:28px 20px 22px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-family:'Reem Kufi',Cairo,sans-serif;font-size:2.6rem;margin:0;line-height:1.1}
+header p{margin:6px 0 0;opacity:.85}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);z-index:5}
+nav .wrap{display:flex;gap:8px;overflow-x:auto;padding:10px 16px}
+nav button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600;padding:6px 16px;border-radius:99px;cursor:pointer}
+nav button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#1b1500}
+main{padding:16px 16px 120px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.item h3{margin:0;font-size:1.05rem}
+.item p{margin:2px 0 4px;color:var(--mute);font-size:.88rem}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:8px}
+.opt+.opt{border-top:1px dashed var(--line);margin-top:8px}
+.lbl{font-weight:600}
+.price{font-weight:800}
+.sizes{display:flex;gap:6px;margin:4px 0 6px;flex-wrap:wrap}
+.sz{border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;padding:2px 12px;border-radius:99px;cursor:pointer}
+.sz[aria-checked=true]{background:var(--gold);border-color:var(--gold);color:#1b1500}
+.qty{display:flex;align-items:center;gap:10px;min-width:118px;justify-content:flex-end}
+.qty button,.add{border:0;font:inherit;font-weight:800;cursor:pointer;border-radius:10px}
+.qty button{width:34px;height:34px;background:var(--green);color:#fff;font-size:1.2rem}
+.add{background:var(--green);color:#fff;padding:6px 18px;min-width:76px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#bar{position:fixed;inset-inline:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);display:none}
+#bar button{width:100%;max-width:720px;display:flex;justify-content:space-between;margin:0 auto;background:var(--gold);color:#1b1500;border:0;border-radius:12px;padding:12px 18px;font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer}
+dialog{border:0;border-radius:18px;padding:0;width:min(520px,94vw);background:var(--card);color:var(--ink);max-height:90vh}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.dlg{padding:20px}
+.dlg h2{margin:0 0 10px;font-family:'Reem Kufi',Cairo,sans-serif}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+label{display:block;margin:12px 0 4px;font-weight:600}
+input,textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.total{font-size:1.2rem;font-weight:800;margin-top:12px;display:flex;justify-content:space-between}
+.send{display:block;text-align:center;text-decoration:none;margin-top:14px;width:100%;background:#1FA855;color:#fff;border:0;border-radius:12px;padding:13px;font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer}
+.send:disabled{opacity:.6}
+.close{background:none;border:0;color:var(--mute);font:inherit;cursor:pointer;margin-top:8px;width:100%}
+.err{color:#C0392B;font-size:.9rem;min-height:1.4em}
+.msg{text-align:center;color:var(--mute);padding:40px 0}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>بلاتو</h1><p>اختار أكلك وابعت طلبك في ثواني</p></div></header>
+<nav><div class="wrap" id="cats" role="group" aria-label="الأقسام"></div></nav>
+<main><div class="wrap" id="list"><div class="msg">بنحمّل المنيو...</div></div></main>
+<div id="bar"><button id="open"><span id="cnt"></span><span id="sum"></span></button></div>
+
+<dialog id="dlg"><div class="dlg">
+<h2>طلبك</h2><div id="lines"></div>
+<div class="total"><span>الإجمالي</span><span id="tot"></span></div>
+<label for="nm">الاسم</label><input id="nm" autocomplete="name">
+<label for="ph">رقم الموبايل</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel">
+<label for="ad">العنوان</label><textarea id="ad" rows="2" autocomplete="street-address"></textarea>
+<div class="err" id="err" role="alert"></div>
+<a class="send" id="send" role="button" target="_blank" rel="noopener" href="#">ابعت الطلب على واتساب</a>
+<button class="close" id="close">كمّل اختيار</button>
+</div></dialog>
+
+<script>
+const SUPABASE_URL="https://atgvhwukiqbljzeatonj.supabase.co";
+const SUPABASE_KEY="sb_publishable_J7FCxF3cY3PMEV1R-PUw0A_DzumPdGW";
+// رقم واتساب المطعم بكود الدولة بدون + (سيبه فاضي لو مش عايز واتساب)
+const WHATSAPP="201080816007";
+
+const H={apikey:SUPABASE_KEY,"Content-Type":"application/json"};
+const $=s=>document.querySelector(s),fmt=n=>n+" ج.م";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let MENU=[],cat=0;const cart={},OPT={};
+
+async function load(){
+ try{
+  const r=await fetch(SUPABASE_URL+"/rest/v1/categories?select=id,name,sort,items(id,name,description,price,available,sizes)&order=sort",{headers:H});
+  if(!r.ok)throw new Error(r.status);
+  MENU=(await r.json()).map(c=>({...c,items:(c.items||[]).filter(i=>i.available).sort((a,b)=>a.id-b.id)})).filter(c=>c.items.length);
+  if(!MENU.length){$("#list").innerHTML='<div class="msg">المنيو فاضي لحد دلوقتي.</div>';return}
+  renderCats();renderList();
+ }catch(e){$("#list").innerHTML='<div class="msg">مقدرناش نحمّل المنيو. اتأكد من النت وجرّب تاني.</div>'}
+}
+function renderCats(){$("#cats").innerHTML=MENU.map((m,k)=>`<button aria-pressed="${k===cat}" data-k="${k}">${esc(m.name)}</button>`).join("")}
+const sel={};
+const sizesOf=it=>Array.isArray(it.sizes)&&it.sizes.length?it.sizes:null;
+function renderList(){
+ $("#list").innerHTML=MENU[cat].items.map(it=>{
+  const sz=sizesOf(it),si=sz?(sel[it.id]??0):0,p=sz?sz[si].price:it.price,key=it.id+"|"+(sz?sz[si].label:""),q=cart[key]?.q||0;
+  const chips=sz?`<div class="sizes" role="radiogroup" aria-label="المقاس">`+sz.map((s,i)=>`<button class="sz" role="radio" aria-checked="${i===si}" data-sz="${i}" data-id="${it.id}">${esc(s.label)}</button>`).join("")+`</div>`:"";
+  return `<div class="item"><div class="t"><h3>${esc(it.name)}</h3><p>${esc(it.description)}</p>${chips}<span class="price">${fmt(p)}</span></div>`+
+  (q?`<div class="qty"><button data-a="-" data-id="${it.id}" aria-label="نقص">−</button><b>${q}</b><button data-a="+" data-id="${it.id}" aria-label="زوّد">+</button></div>`:`<button class="add" data-a="+" data-id="${it.id}">أضف</button>`)+`</div>`}).join("")}
+const lines=()=>Object.values(cart).filter(x=>x.q>0);
+const totals=()=>({n:lines().reduce((a,b)=>a+b.q,0),s:lines().reduce((a,b)=>a+b.q*b.price,0)});
+function renderBar(){const t=totals();$("#bar").style.display=t.n?"block":"none";$("#cnt").textContent="شوف الطلب ("+t.n+")";$("#sum").textContent=fmt(t.s)}
+
+$("#cats").onclick=e=>{const b=e.target.closest("button");if(!b)return;cat=+b.dataset.k;renderCats();renderList()};
+$("#list").onclick=e=>{const b=e.target.closest("button");if(!b)return;const id=+b.dataset.id;
+ if(b.dataset.sz!==undefined){sel[id]=+b.dataset.sz;renderList();return}
+ const it=MENU.flatMap(c=>c.items).find(i=>i.id===id),sz=sizesOf(it),si=sz?(sel[id]??0):0;
+ const label=sz?sz[si].label:"",price=Number(sz?sz[si].price:it.price),key=id+"|"+label;
+ const q=Math.max(0,(cart[key]?.q||0)+(b.dataset.a==="+"?1:-1));
+ cart[key]={id,name:label?`${it.name} (${label})`:it.name,price,q};renderList();renderBar()};
+$("#open").onclick=()=>{$("#lines").innerHTML=lines().map(x=>`<div class="row"><span>${x.q} × ${esc(x.name)}</span><span>${fmt(x.q*x.price)}</span></div>`).join("");$("#tot").textContent=fmt(totals().s);$("#err").textContent="";$("#dlg").showModal()};
+$("#close").onclick=()=>$("#dlg").close();
+
+$("#send").onclick=e=>{
+ const nm=$("#nm").value.trim(),ph=$("#ph").value.trim(),ad=$("#ad").value.trim(),err=$("#err");
+ if(!nm||!ph||!ad){e.preventDefault();err.textContent="اكتب الاسم ورقم الموبايل والعنوان عشان نوصلك الطلب.";return}
+ const l=lines(),t=totals().s;
+ const msg=`طلب جديد من بلاتو\n${l.map(x=>`• ${x.q} × ${x.name} = ${x.q*x.price} ج.م`).join("\n")}\nالإجمالي: ${t} ج.م\n\nالاسم: ${nm}\nالموبايل: ${ph}\nالعنوان: ${ad}`;
+ // نسخة احتياطية في Supabase في الخلفية، ولو فشلت مش بتأثر على الطلب
+ try{fetch(SUPABASE_URL+"/rest/v1/orders",{method:"POST",keepalive:true,headers:{...H,Prefer:"return=minimal"},
+  body:JSON.stringify({customer_name:nm,phone:ph,address:ad,lines:l.map(x=>({name:x.name,qty:x.q,price:x.price})),total:t})}).catch(()=>{})}catch(x){}
+ // الرابط بيتحدّث قبل ما المتصفح يفتحه، فمش بيتحجب
+ e.currentTarget.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(msg);
+ setTimeout(()=>{for(const k in cart)delete cart[k];renderList();renderBar();$("#dlg").close()},400);
+};
+load();
+</script>
+</body>
+</html>
